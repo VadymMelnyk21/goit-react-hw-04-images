@@ -27,10 +27,9 @@ export default function App() {
 
     if (page === 1) {
       setImages([]);
-      fetchGallery();
-    } else {
-      fetchGallery();
     }
+
+    fetchGallery();
 
     function fetchGallery() {
       fetchImage(searchQuery, page)
