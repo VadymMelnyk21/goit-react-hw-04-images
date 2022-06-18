@@ -6,6 +6,7 @@ import {
   ButtonLabel,
   Input,
 } from './Searchbar.styled';
+import PropTypes from 'prop-types';
 
 export default function Searchbar({ onSubmit, errorMessage }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,3 +47,8 @@ export default function Searchbar({ onSubmit, errorMessage }) {
     </SearchbarHeader>
   );
 }
+
+Searchbar.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
+  errorMessage: PropTypes.func.isRequired,
+};
