@@ -4,7 +4,7 @@ import { fetchImage } from '../services/api';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './Button/Button';
 import Loader from './Loader/Loader';
-import scroll from '../services/scroll';
+import * as Scroll from 'react-scroll';
 import Error from './Error/Error';
 import Modal from './Modal/Modal';
 
@@ -43,8 +43,6 @@ export default function App() {
             setStatus('rejected');
             setError('По вашому запиту нічого не знайдено!');
           }
-
-          scroll();
         })
         .catch(error => {
           setError(error.message);
@@ -62,6 +60,7 @@ export default function App() {
 
   const LoadMore = () => {
     setPage(page + 1);
+    Scroll.animateScroll.scrollMore(300, { duration: 400 });
   };
 
   const toggleModal = largeImageURL => {
