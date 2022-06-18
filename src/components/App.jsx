@@ -19,7 +19,7 @@ export default function App() {
   const [modalImage, setModalImage] = useState(null);
 
   useEffect(() => {
-    if (searchQuery === '') {
+    if (!searchQuery) {
       return;
     }
 
