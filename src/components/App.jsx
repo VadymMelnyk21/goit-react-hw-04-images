@@ -101,7 +101,10 @@ export default class App extends Component {
 
     return (
       <>
-        <Searchbar onSubmit={this.searchValue} value={this.errorString} />
+        <Searchbar
+          onSubmit={this.searchValue}
+          errorMessage={this.errorString}
+        />
 
         {status !== 'idle' && images.length > 0 && (
           <ImageGallery images={images} toggleModal={this.toggleModal} />

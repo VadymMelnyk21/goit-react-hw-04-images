@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import {
   SearchbarHeader,
   Form,
@@ -7,49 +7,42 @@ import {
   Input,
 } from './Searchbar.styled';
 
-export default class Searchbar extends Component {
-  state = {
-    searchQuery: '',
-  };
+export default function Searchbar({ onSubmit, errorMessage }) {
+  const [searchQuery, setSearchQuery] = useState('');
 
-  changeQuery = e => {
-    this.setState({ searchQuery: e.currentTarget.value.toLowerCase().trim() });
-  };
-
-  formSubmit = e => {
+  const formSubmit = e => {
     e.preventDefault();
-    if (this.state.searchQuery.trim() === '') {
-      // alert('Ваш запит не коректний');
-      this.props.value();
+    if (searchQuery.trim() === '') {
+      errorMessage();
       return;
     }
-    this.props.onSubmit(this.state.searchQuery);
+    onSubmit(searchQuery);
 
-    this.resetInput();
+    resetInput();
   };
 
-  resetInput = () => {
-    this.setState({ searchQuery: '' });
+  const resetInput = () => {
+    setSearchQuery('');
   };
 
-  render() {
-    return (
-      <SearchbarHeader>
-        <Form onSubmit={this.formSubmit}>
-          <Button type="submit">
-            <ButtonLabel>Search</ButtonLabel>
-          </Button>
+  return (
+    <SearchbarHeader>
+      <Form onSubmit={formSubmit}>
+        <Button type="submit">
+          <ButtonLabel>Search</ButtonLabel>
+        </Button>
 
-          <Input
-            type="text"
-            autoComplete="off"
-            autoFocus
-            placeholder="Неймовірний світ зображень"
-            value={this.state.searchQuery}
-            onChange={this.changeQuery}
-          />
-        </Form>
-      </SearchbarHeader>
-    );
-  }
+        <Input
+          type="text"
+          autoComplete="off"
+          autoFocus
+          placeholder="Неймовірний світ зображень"
+          value={searchQuery}
+          onChange={e =>
+            setSearchQuery(e.currentTarget.value.toLowerCase().trim())
+          }
+        />
+      </Form>
+    </SearchbarHeader>
+  );
 }
