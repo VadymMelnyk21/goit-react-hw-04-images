@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import Searchbar from './Searchbar/Searchbar';
 import { fetchImage } from '../services/api';
 import ImageGallery from './ImageGallery/ImageGallery';
@@ -8,120 +8,90 @@ import scroll from '../services/scroll';
 import Error from './Error/Error';
 import Modal from './Modal/Modal';
 
-export default class App extends Component {
-  state = {
-    searchQuery: '',
-    page: 1,
-    images: [],
-    status: 'idle',
-    totalHits: 0,
-    error: '',
-    showModal: false,
-    modalImage: null,
-  };
+export default function App() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [images, setImages] = useState([]);
+  const [status, setStatus] = useState('idle');
+  const [totalHits, setTotalHits] = useState(0);
+  const [error, setError] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [modalImage, setModalImage] = useState(null);
 
-  searchValue = newQuery => {
-    if (newQuery !== this.state.searchQuery) {
-      this.setState({
-        searchQuery: newQuery,
-        page: 1,
-      });
+  useEffect(() => {
+    if (searchQuery === '') {
+      return;
+    }
+
+    setStatus('pending');
+
+    if (page === 1) {
+      setImages([]);
+      fetchGallery();
+    } else {
+      fetchGallery();
+    }
+
+    function fetchGallery() {
+      fetchImage(searchQuery, page)
+        .then(response => {
+          setImages(prevImages => [...prevImages, ...response.hits]);
+          setStatus('resolved');
+          setTotalHits(response.totalHits);
+
+          if (response.hits.length === 0) {
+            setStatus('rejected');
+            setError('По вашому запиту нічого не знайдено!');
+          }
+
+          scroll();
+        })
+        .catch(error => {
+          setError(error.message);
+          setStatus('rejected');
+        });
+    }
+  }, [searchQuery, page]);
+
+  const searchValue = newQuery => {
+    if (newQuery !== searchQuery) {
+      setSearchQuery(newQuery);
+      setPage(1);
     }
   };
 
-  LoadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
-    // console.log(this.state.page);
+  const LoadMore = () => {
+    setPage(page + 1);
   };
 
-  toggleModal = largeImageURL => {
-    this.setState(({ showModal, modalImage }) => ({
-      showModal: !showModal,
-      modalImage: largeImageURL,
-    }));
+  const toggleModal = largeImageURL => {
+    setShowModal(!showModal);
+    setModalImage(largeImageURL);
   };
 
-  errorString = () => {
-    this.setState({
-      images: [],
-      status: 'rejected',
-      error: 'На порожню стрічку запит не відбувається!',
-    });
+  const errorString = () => {
+    setImages([]);
+    setStatus('rejected');
+    setError('На порожню стрічку запит не відбувається!');
   };
 
-  componentDidUpdate(_, prevState) {
-    const prevImages = prevState.searchQuery;
-    const prevPage = prevState.page;
+  return (
+    <>
+      <Searchbar onSubmit={searchValue} errorMessage={errorString} />
 
-    const nextImages = this.state.searchQuery;
-    const nextPage = this.state.page;
+      {status !== 'idle' && images.length > 0 && (
+        <ImageGallery images={images} toggleModal={toggleModal} />
+      )}
 
-    if (prevImages !== nextImages || prevPage !== nextPage) {
-      this.setState({
-        status: 'pending',
-      });
-      if (nextPage === 1) {
-        this.setState({ images: [] });
-      }
-      this.fetchGallery();
-    }
-  }
+      {status === 'resolved' && images.length !== totalHits && (
+        <Button onClick={LoadMore} />
+      )}
 
-  fetchGallery = () => {
-    const { searchQuery, page } = this.state;
+      {status === 'rejected' && <Error message={error} />}
 
-    fetchImage(searchQuery, page)
-      .then(response => {
-        // console.log(response);
-        this.setState(prevState => ({
-          images: [...prevState.images, ...response.hits],
-          status: 'resolved',
-          totalHits: response.totalHits,
-        }));
+      {status === 'pending' && <Loader />}
 
-        if (response.hits.length === 0) {
-          this.setState({
-            status: 'rejected',
-            error: 'По вашому запиту нічого не знайдено!',
-          });
-        }
-
-        scroll();
-      })
-      .catch(error =>
-        this.setState({ error: error.message, status: 'rejected' })
-      );
-  };
-
-  render() {
-    const { images, status, error, showModal, modalImage, totalHits } =
-      this.state;
-
-    return (
-      <>
-        <Searchbar
-          onSubmit={this.searchValue}
-          errorMessage={this.errorString}
-        />
-
-        {status !== 'idle' && images.length > 0 && (
-          <ImageGallery images={images} toggleModal={this.toggleModal} />
-        )}
-
-        {status === 'resolved' && images.length !== totalHits && (
-          <Button onClick={this.LoadMore} />
-        )}
-
-        {status === 'rejected' && <Error message={error} />}
-
-        {status === 'pending' && <Loader />}
-
-        {showModal && (
-          <Modal image={modalImage} closeModal={this.toggleModal} />
-        )}
-      </>
-    );
-  }
+      {showModal && <Modal image={modalImage} closeModal={toggleModal} />}
+    </>
+  );
 }
